@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+    <!-- 全局setting配置，根据需要添加 -->
+
+    <!-- 配置别名 -->
+    <typeAliases>
+        <!-- 指定类型的别名 -->
+        <typeAlias alias="String" type="java.lang.String"/>
+        <typeAlias alias="Integer" type="java.lang.Integer"/>
+        <typeAlias alias="Long" type="java.lang.Long"/>
+        <typeAlias alias="HashMap" type="java.util.HashMap"/>
+        <typeAlias alias="LinkedHashMap" type="java.util.LinkedHashMap"/>
+        <typeAlias alias="ArrayList" type="java.util.ArrayList"/>
+        <typeAlias alias="HashSet" type="java.util.HashSet"/>
+
+        <!-- 批量扫描别名 -->
+        <!--<package name="com.qs.entity"/>-->
+    </typeAliases>
+
+    <!-- 配置mapper
+    由于使用spring和mybatis的整合包进行mapper扫描，这里不需要配置了。
+    必须遵循：mapper.xml和mapper.java文件同名且在一个目录
+     -->
+
+    <!-- <mappers>
+    </mappers> -->
+</configuration>

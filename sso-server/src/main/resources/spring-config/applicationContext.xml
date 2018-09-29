@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:stat="http://www.alibaba.com/schema/stat"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd http://www.alibaba.com/schema/stat http://www.alibaba.com/schema/stat.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <mvc:annotation-driven/>
+    <context:annotation-config/>
+    <aop:aspectj-autoproxy/>
+
+    <!-- 注入加载properties属性文件工具类 -->
+    <bean class="com.sharp.sso.server.utils.ConfigUtils">
+        <property name="fileEncoding" value="UTF-8"/>
+        <property name="locations">
+            <list>
+                <!--数据库参数配置 -->
+                <value>classpath:jdbc.properties</value>
+                <!--服务参数配置(Zookeeper、Dubbo、MQ、Redis相关)-->
+                <value>classpath:service.properties</value>
+                <!--当前应用参数配置 -->
+                <value>classpath:config.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- 过滤器 -->
+    <bean id="sharpSsoFilter" class="com.sharp.sso.client.SsoFilterContainer">
+        <property name="isServer" value="true"/>
+        <property name="authenticationRpcService" ref="authenticationRpcService"/>
+        <property name="filters">
+            <list>
+                <bean class="com.sharp.sso.client.filter.SsoFilter"/>
+            </list>
+        </property>
+    </bean>
+
+    <!-- SSO令牌管理(cookie+session) -->
+    <!--<bean id="tokenManager" class="com.sharp.sso.server.common.token.LocalTokenManager">-->
+    <!--<property name="tokenTimeout" value="1800"/>-->
+    <!--</bean>-->
+
+
+    <!-- SSO令牌管理（cookie+redis实现） -->
+    <!-- redis模版，提供对string、set、list、hash类型的redis操作 -->
+    <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+        <property name="connectionFactory" ref="jedisConnectionFactory"/>
+    </bean>
+    <!-- 自定义redisCache，支持泛型，封装redisTemplate对redis的常用操作 -->
+    <bean id="redisCache" class="com.sharp.sso.server.common.RedisCache">
+        <property name="redisTemplate" ref="redisTemplate"/>
+    </bean>
+    <!--SSO令牌管理(分布式) : 用于部署多JVM实例时，RedisSession覆盖HttpSession实现Session共享-->
+    <bean id="tokenManager" class="com.sharp.sso.server.common.token.RedisTokenManager">
+        <property name="tokenTimeout" value="${sso.timeout}"/>
+    </bean>
+
+    <!--1. 扫描注解，这里过滤掉SpringMVC的注解-->
+    <context:component-scan base-package="com.sharp.sso">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <!--<import resource="classpath*:spring-config/spring-mybatis.xml"/>-->
+    <import resource="classpath*:spring-config/dubbo-provider.xml"/>
+    <import resource="classpath*:spring-config/spring-redis.xml"/>
+</beans>

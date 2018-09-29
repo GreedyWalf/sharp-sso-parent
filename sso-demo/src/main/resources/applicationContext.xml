@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:annotation-config/>
+
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="fileEncoding" value="UTF-8"/>
+        <property name="locations">
+            <list>
+                <!--服务参数配置(Zookeeper、Dubbo、MQ、Redis相关) -->
+                <value>classpath:service.properties</value>
+                <!--当前应用参数配置 -->
+                <value>classpath:config.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- sso-client模块定义的统一认证过滤器 -->
+    <bean id="sharpSsoFilter" class="com.sharp.sso.client.SsoFilterContainer">
+        <property name="isServer" value="false"/>
+        <property name="ssoServerUrl" value="${sso.server.url}"/>
+        <property name="authenticationRpcService" ref="authenticationRpcService"/>
+        <property name="filters">
+            <list>
+                <!-- 单点登录过滤器 -->
+                <bean class="com.sharp.sso.client.filter.SsoFilter"/>
+                <!-- 单点退出过滤器 -->
+                <bean class="com.sharp.sso.client.filter.LogoutFilter">
+                    <!-- 拦截当前系统的/logout请求，过滤器中最后会调用认证中心的退出方法 -->
+                    <property name="pattern" value="/logout"/>
+                    <property name="ssoBackUrl" value="/index"/>
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+    <import resource="dubbo-consumer.xml"/>
+</beans>
